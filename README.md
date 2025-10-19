@@ -22,10 +22,16 @@ This repository contains a prototype implementation of a collateralised debt pos
 - Sepolia deployment script consumes live meme-token, Chainlink-style feed, and router addresses supplied through environment variables.
 - Router liquidity seeding script (`seed-router-sepolia.js`) deposits collateral, mints cUSD, funds the router, and adjusts the oracle price for on-chain liquidation testing.
 - Sepolia deployment verified on Etherscan to aid public review.
+- Production-grade infrastructure scripts deploy an OpenZeppelin-based `MemeToken`, role-gated `ManagedPriceFeed`, and full Uniswap V2 factory/router stack for live testing.
+- Keeper monitor script (`keeper-monitor.js`) scans configured vaults and triggers `rebalancePosition` when collateral ratios fall below the configured threshold.
+- Keeper monitor script (`keeper-monitor.js`) scans configured vaults and triggers `rebalancePosition` when collateral ratios fall below the configured threshold.
 
 ## Contract Layout
 
 - `contracts/CDPStablecoin.sol` – Core implementation. Contains lightweight ERC20, Ownable, oracle, and router interfaces so the contract is self-contained.
+- `contracts/token/MemeToken.sol` – OpenZeppelin-based collateral token with mint/burn controls for treasury operations.
+- `contracts/oracle/ManagedPriceFeed.sol` – Chainlink-compatible feed managed through access control for off-chain price writers.
+- `contracts/mocks/` – Local testing doubles for collateral, oracle, and router flows.
 
 ## Configuration Notes
 
@@ -43,10 +49,14 @@ This repository contains a prototype implementation of a collateralised debt pos
 
 ## TODOs
 
-- Replace mock infrastructure with production-grade contracts (meme token, oracle, router) as you move beyond testing.
-- Implement keeper or cron jobs that monitor positions and call `rebalancePosition` when needed.
 - Assess and integrate economic parameters such as ongoing stability fees, governance-controlled burn rates, or variable liquidation sizes.
 - Build monitoring/alerting (ratio dashboards, oracle freshness) and document emergency procedures before staging/mainnet rollout.
+- Harden off-chain tooling (keeper scheduling, metrics) and prepare runbooks for production operations.
+
+## Next Steps
+
+- Swap in production-grade contracts (real meme token, Chainlink feed, and DEX router) per deployment network once testing is complete.
+- Deploy the keeper monitor on a scheduler (e.g., cron, serverless) and tune thresholds/limits for live market conditions.
 
 This implementation is a starting point and should be carefully audited and adapted before mainnet deployment.
 
@@ -66,5 +76,8 @@ This implementation is a starting point and should be carefully audited and adap
 	- `SEPOLIA_PRICE_FEED` pointing to a Chainlink aggregator (or a managed feed for your meme token).
 	- `SEPOLIA_ROUTER` set to a Uniswap/Sushiswap-style router that supports `swapTokensForExactTokens`.
 	- Optional: `SEPOLIA_OWNER` to transfer governance on deployment; defaults to the deployer.
+	- `SEPOLIA_STABLECOIN` (filled automatically after deployment scripts run).
+- Provision production-grade infra: `npm run deploy:prod-infra` (deploys `MemeToken`, `ManagedPriceFeed`, Uniswap V2 factory/router, and seeds an initial price point).
 - Deploy the stablecoin with `npm run deploy:sepolia`.
-- After deployment, seed the router with collateral/stablecoin liquidity and keep the price feed updated so the CDP health checks and liquidation flow operate correctly.
+- Seed liquidity and update the managed oracle: `npx hardhat run scripts/seed-router-sepolia.js --network sepolia`.
+- Schedule the keeper monitor (`npm run keeper:sepolia`) to keep vaults healthy in response to oracle updates.

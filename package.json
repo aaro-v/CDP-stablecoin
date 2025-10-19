@@ -8,7 +8,9 @@
     "test": "hardhat test",
     "node": "hardhat node",
     "deploy:localhost": "hardhat run scripts/deploy-local.js --network localhost",
-    "deploy:sepolia": "hardhat run scripts/deploy-sepolia.js --network sepolia"
+    "deploy:prod-infra": "hardhat run scripts/deploy-prod-infra.js --network sepolia",
+    "deploy:sepolia": "hardhat run scripts/deploy-sepolia.js --network sepolia",
+    "keeper:sepolia": "hardhat run scripts/keeper-monitor.js --network sepolia"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
@@ -19,6 +21,9 @@
     "hardhat": "^2.22.3"
   },
   "dependencies": {
+    "@openzeppelin/contracts": "^5.0.2",
+    "@uniswap/v2-core": "^1.0.1",
+    "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "ethers": "^6.10.0"
   }
 }
